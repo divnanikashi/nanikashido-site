@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>なにかし堂 × 対話会100か所｜まちの未来を、いつもの仲間と。</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --indigo: #2c4a6b;
+    --indigo-dark: #1d3550;
+    --indigo-light: #e7ecf2;
+    --mustard: #d99332;
+    --vermilion: #c8533c;
+    --pine: #5a8a6b;
+    --cream: #faf6ee;
+    --warm-card: #fffbf3;
+    --warm-border: #ebe2cf;
+    --ink: #2a2422;
+    --sumi: #6b5d52;
+  }
+  html, body {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--cream);
+  }
+  body { min-height: 100vh; }
+
+  .font-mincho { font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; }
+  .font-gothic { font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; }
+
+  .text-indigo { color: var(--indigo); }
+  .text-indigo-dark { color: var(--indigo-dark); }
+  .text-mustard { color: var(--mustard); }
+  .text-vermilion { color: var(--vermilion); }
+  .text-pine { color: var(--pine); }
+  .text-sumi { color: var(--sumi); }
+  .bg-indigo { background: var(--indigo); }
+  .bg-indigo-dark { background: var(--indigo-dark); }
+  .bg-indigo-light { background: var(--indigo-light); }
+  .bg-cream { background: var(--cream); }
+  .bg-warm-card { background: var(--warm-card); }
+  .bg-mustard { background: var(--mustard); }
+  .bg-vermilion { background: var(--vermilion); }
+  .bg-pine { background: var(--pine); }
+
+  .nav-link {
+    padding: 8px 14px; border-radius: 4px; font-size: 14px;
+    transition: all .15s; cursor: pointer; color: var(--ink);
+    font-weight: 500;
+  }
+  .nav-link:hover { background: var(--indigo-light); color: var(--indigo-dark); }
+  .nav-link.active { background: var(--indigo); color: white; }
+
+  .card {
+    background: var(--warm-card);
+    border: 1px solid var(--warm-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(42,36,34,0.04);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(42,36,34,0.08); }
+
+  .chip {
+    display: inline-flex; align-items: center; padding: 3px 10px;
+    border-radius: 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .chip-indigo { background: #e7ecf2; color: var(--indigo-dark); }
+  .chip-mustard { background: #fbecd2; color: #8b5e1f; }
+  .chip-vermilion { background: #f5d9d2; color: #8a3525; }
+  .chip-pine { background: #dde9df; color: #3d6749; }
+  .chip-purple { background: #e6dfee; color: #5b3f87; }
+  .chip-pink { background: #f5dbdf; color: #99425a; }
+  .chip-gray { background: #ece7df; color: #6b5d52; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 600; border-radius: 8px; padding: 12px 22px; font-size: 15px;
+    transition: all .15s; cursor: pointer; border: none;
+  }
+  .btn-indigo { background: var(--indigo); color: white; }
+  .btn-indigo:hover { background: var(--indigo-dark); }
+  .btn-mustard { background: var(--mustard); color: white; }
+  .btn-mustard:hover { filter: brightness(0.95); }
+  .btn-vermilion { background: var(--vermilion); color: white; }
+  .btn-outline { background: var(--warm-card); color: var(--indigo-dark); border: 1.5px solid var(--indigo); }
+  .btn-outline:hover { background: var(--indigo-light); }
+  .btn-ghost { background: transparent; color: var(--indigo-dark); }
+  .btn-ghost:hover { background: var(--indigo-light); }
+
+  .input, .textarea, .select {
+    width: 100%; border: 1.5px solid var(--warm-border); border-radius: 6px;
+    padding: 10px 14px; font-size: 15px; background: var(--warm-card);
+    transition: border-color .15s; font-family: inherit;
+  }
+  .input:focus, .textarea:focus, .select:focus { outline: none; border-color: var(--indigo); }
+
+  .label { font-size: 14px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .req { color: var(--vermilion); font-size: 11px; font-weight: 700; padding: 2px 6px; background: #f5d9d2; border-radius: 3px; }
+  .opt { color: var(--sumi); font-size: 11px; font-weight: 600; padding: 2px 6px; background: #ece7df; border-radius: 3px; }
+
+  .section-title {
+    font-size: 24px; font-weight: 700; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  }
+  .section-sub { color: var(--sumi); font-size: 14px; margin-bottom: 22px; }
+
+  .progress-bar { height: 10px; background: #ece7df; border-radius: 999px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mustard), var(--vermilion));
+    border-radius: 999px; transition: width .8s ease;
+  }
+
+  .voice-bubble {
+    background: var(--warm-card);
+    border: 1px solid var(--warm-border);
+    border-left: 4px solid var(--mustard);
+    border-radius: 8px;
+    padding: 16px 18px;
+    position: relative;
+  }
+  .voice-bubble::before {
+    content: '「';
+    position: absolute; top: 4px; left: 8px;
+    font-size: 28px; color: var(--mustard); font-family: serif; line-height: 1;
+    opacity: 0.5;
+  }
+  .voice-bubble-content { padding-left: 18px; }
+
+  .step-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--warm-card); border: 2px solid var(--indigo); color: var(--indigo);
+    font-weight: 700; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: "Hiragino Mincho ProN", serif; font-size: 18px;
+  }
+
+  .leaflet-container { font-family: inherit; border-radius: 12px; }
+
+  .filter-pill {
+    padding: 6px 14px; border-radius: 4px; border: 1.5px solid var(--warm-border);
+    background: var(--warm-card); font-size: 13px; cursor: pointer;
+    transition: all .15s; color: var(--sumi); font-family: inherit;
+  }
+  .filter-pill.active { background: var(--indigo); color: white; border-color: var(--indigo); }
+  .filter-pill:hover:not(.active) { border-color: var(--indigo); color: var(--indigo); }
+
+  /* hero */
+  .hero-bg {
+    background:
+      radial-gradient(circle at 85% 15%, rgba(217,147,50,0.18), transparent 45%),
+      radial-gradient(circle at 15% 85%, rgba(90,138,107,0.15), transparent 45%),
+      linear-gradient(135deg, #f4ede0 0%, #ebe1cb 100%);
+    position: relative;
+  }
+  .hero-pattern {
+    position: absolute; inset: 0; opacity: 0.04; pointer-events: none;
+    background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 14px);
+  }
+
+  .counter-num {
+    font-size: 96px; font-weight: 900; line-height: 1;
+    color: var(--vermilion);
+    letter-spacing: -2px;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  }
+
+  /* PoC badge */
+  .poc-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--vermilion); color: white;
+    padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700;
+  }
+  .poc-banner {
+    background: #fff4e6;
+    border-bottom: 1px solid #f0d9b3;
+    color: #6b4a1a;
+  }
+
+  /* logo */
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: var(--indigo);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-weight: 900;
+    border-radius: 50% 8px 50% 8px;
+    font-size: 22px;
+    transform: rotate(-5deg);
+  }
+
+  /* hand-drawn underline accent */
+  .accent-underline {
+    background-image: linear-gradient(transparent 60%, rgba(217,147,50,0.4) 60%);
+    padding: 0 4px;
+  }
+
+  /* sushi-stamp style heading */
+  .stamp {
+    display: inline-block;
+    background: var(--vermilion);
+    color: white;
+    padding: 6px 14px;
+    font-family: "Hiragino Mincho ProN", serif;
+    font-weight: 700;
+    transform: rotate(-2deg);
+    border-radius: 2px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+  }
+
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+
+  @media (max-width: 768px) {
+    .counter-num { font-size: 68px; }
+    .nav-desktop { display: none; }
+  }
+  @media (min-width: 769px) {
+    .nav-mobile { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== PoC BANNER ===================== -->
+<div class="poc-banner">
+  <div class="max-w-6xl mx-auto px-4 py-2 text-xs flex items-center justify-center gap-2 text-center">
+    <span class="poc-badge">実証モデル</span>
+    <span>このサイトは、なにかし堂による実証運用です。荒川区の公式プロジェクトではありません。</span>
+  </div>
+</div>
+
+<!-- ===================== HEADER ===================== -->
+<header class="bg-warm-card border-b border-warm-border sticky top-0" style="z-index: 1100">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <a class="flex items-center gap-3 cursor-pointer" onclick="navigate('top')">
+      <div class="logo-mark">な</div>
+      <div>
+        <div class="font-mincho font-bold text-lg leading-none">なにかし堂</div>
+        <div class="text-xs text-sumi mt-1">× 対話会100か所</div>
+      </div>
+    </a>
+    <nav class="nav-desktop flex items-center gap-1">
+      <span class="nav-link" data-page="top" onclick="navigate('top')">ホーム</span>
+      <span class="nav-link" data-page="map" onclick="navigate('map')">マップ</span>
+      <span class="nav-link" data-page="events" onclick="navigate('events')">対話会を探す</span>
+      <span class="nav-link" data-page="progress" onclick="navigate('progress')">進捗</span>
+      <span class="nav-link" data-page="about" onclick="navigate('about')">なにかし堂について</span>
+      <span class="nav-link" data-page="hostguide" onclick="navigate('hostguide')">ホストになる</span>
+    </nav>
+    <button class="nav-mobile p-2" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="mobileMenu" class="nav-mobile hidden border-t border-warm-border bg-warm-card">
+    <div class="px-4 py-3 flex flex-col gap-1">
+      <span class="nav-link" onclick="navigate('top'); document.getElementById('mobileMenu').classList.add('hidden')">ホーム</span>
+      <span class="nav-link" onclick="navigate('map'); document.getElementById('mobileMenu').classList.add('hidden')">マップ</span>
+      <span class="nav-link" onclick="navigate('events'); document.getElementById('mobileMenu').classList.add('hidden')">対話会を探す</span>
+      <span class="nav-link" onclick="navigate('progress'); document.getElementById('mobileMenu').classList.add('hidden')">進捗</span>
+      <span class="nav-link" onclick="navigate('about'); document.getElementById('mobileMenu').classList.add('hidden')">なにかし堂について</span>
+      <span class="nav-link" onclick="navigate('hostguide'); document.getElementById('mobileMenu').classList.add('hidden')">ホストになる</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== MAIN ===================== -->
+<main id="main" class="min-h-screen"></main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="bg-indigo-dark text-white mt-16">
+  <div class="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="logo-mark" style="background:white;color:var(--indigo-dark)">な</div>
+        <div>
+          <div class="font-mincho font-bold text-lg">なにかし堂</div>
+          <div class="text-xs opacity-80">× 対話会100か所</div>
+        </div>
+      </div>
+      <p class="opacity-80 leading-relaxed">荒川区を拠点に、まちの「なにか」を一緒に育てる任意団体です。2026年から、対話会100か所プロジェクトを始めました。</p>
+    </div>
+    <div>
+      <div class="font-bold mb-3 font-mincho">サイトマップ</div>
+      <ul class="space-y-2 opacity-90">
+        <li><a class="hover:underline cursor-pointer" onclick="navigate('top')">ホーム</a></li>
+        <li><a class="hover:underline cursor-pointer" onclick="navigate('map')">対話会マップ</a></li>
+        <li><a class="hover:underline cursor-pointer" onclick="navigate('events')">対話会を探す</a></li>
+        <li><a class="hover:underline cursor-pointer" onclick="navigate('progress')">進捗</a></li>
+        <li><a class="hover:underline cursor-pointer" onclick="navigate('about')">なにかし堂について</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="font-bold mb-3 font-mincho">お問い合わせ</div>
+      <p class="opacity-90 leading-relaxed">なにかし堂（任意団体）<br/>東京都荒川区<br/>Email: <span id="footerEmail">hello@nanikashido.example</span><br/><br/>※ メールでのご連絡を歓迎します</p>
+    </div>
+  </div>
+  <div class="border-t border-white/20">
+    <div class="max-w-6xl mx-auto px-4 py-4 text-xs opacity-70 flex flex-wrap justify-between gap-3">
+      <span>© 2026 なにかし堂 / 実証モデル運用中</span>
+      <div class="flex gap-4">
+        <a class="hover:underline" href="#">プライバシーポリシー</a>
+        <a class="hover:underline" href="#">利用規約</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// 設定（ここを編集すればサイト全体に反映されます）
+// ============================================================
+const CONFIG = {
+  // Google Sheets ID（URLの /d/ と /edit の間の文字列）
+  // 空欄のままだとデモデータで動作します。Sheets準備後に貼り付けてください。
+  SHEET_ID: '1x6Ojx-xQUNeQpi14xpQHRZfRYxsGZi-R9Vs0Ui922_M',
+
+  // Google Forms の共有URL（forms.gle/xxxxxxxx）
+  HOST_INQUIRY_FORM: 'https://forms.gle/xxxxxxxx',
+  PARTICIPATE_FORM:  'https://forms.gle/xxxxxxxx',
+  VOICE_FORM:        'https://forms.gle/xxxxxxxx',
+  // 声フォームの「対話会ID」項目のentry ID（任意・空ならパラメータ無し）
+  // 例: 'entry.123456789' （Forms→「事前入力したリンクを取得」で確認）
+  VOICE_FORM_EVENT_ID_ENTRY: '',
+
+  // 100か所達成のゴール（変更可能）
+  TOTAL_GOAL: 100,
+
+  // 団体情報
+  ORG_NAME: 'なにかし堂',
+  ORG_EMAIL: 'div.nanikashido@gmail.com',
+};
+
+// ============================================================
+// データ（Sheetsから取得 → 失敗時はFALLBACKを使用）
+// ============================================================
+let EVENTS = [];
+let VOICES = [];
+
+// ===================== MOCK DATA (PoC scale) =====================
+const THEMES = {
+  '子育て': 'chip-pink',
+  '教育': 'chip-indigo',
+  '高齢': 'chip-purple',
+  '若者': 'chip-mustard',
+  'まちづくり': 'chip-pine',
+  '防災': 'chip-gray',
+  '多文化': 'chip-vermilion',
+};
+
+const AREAS = ['荒川', '南千住', '町屋', '三河島', '日暮里', '西日暮里'];
+
+// PoC期 = 数件しかない、というリアル感を出す
+const FALLBACK_EVENTS = [
+  { id: 1, title: '第1回 なにかし堂 対話会｜まちの「なにか」を語ろう', area: '町屋', date: '2026-05-12', time: '19:00-21:00', format: '対面', venue: 'まちやカフェmoi（仮）', themes: ['まちづくり','若者'], host: 'なにかし堂', capacity: 12, applied: 8, status: '募集中', lat: 35.7398, lng: 139.7820, desc: 'なにかし堂の最初の対話会です。まちで気になっていること、変えたいこと、続けてほしいこと。お茶を飲みながら、ゆるく話しませんか。' },
+  { id: 2, title: '日暮里・若者で語る「これからの仕事と暮らし」', area: '日暮里', date: '2026-05-19', time: '19:30-21:30', format: 'ハイブリッド', venue: 'シェアスペースnippori', themes: ['若者','まちづくり'], host: 'なにかし堂', capacity: 15, applied: 4, status: '募集中', lat: 35.7281, lng: 139.7705, desc: '20〜30代を中心に、これからの働き方・住まい方を話します。オンライン参加も可。' },
+  { id: 3, title: '町屋・子育て中の「ちょっと聞いてよ」会', area: '町屋', date: '2026-05-25', time: '10:30-12:00', format: '対面', venue: '町屋児童館（予定）', themes: ['子育て'], host: 'ご近所ママの会（協力ホスト）', capacity: 10, applied: 6, status: '募集中', lat: 35.7410, lng: 139.7830, desc: 'お子さま連れOK。日々の小さな困りごとや、まちで欲しい場所について話します。' },
+  { id: 4, title: '《予告》西日暮里・高齢者の暮らしを聞く会', area: '西日暮里', date: '2026-06-02', time: '14:00-16:00', format: '対面', venue: '調整中', themes: ['高齢','健康'], host: 'なにかし堂', capacity: 15, applied: 0, status: '準備中', lat: 35.7320, lng: 139.7670, desc: '近日、開催予定です。会場・詳細は決まり次第ご案内します。' },
+];
+
+const FALLBACK_VOICES = [
+  { id: 1, eventId: 1, content: '住んでて気持ちいいまち、というのを言葉にできずにいた。今日話せて、自分が何を大事にしているか少し見えた気がする。', themes: ['まちづくり'], age: '30代', area: '町屋', highlighted: true, status: '集約済み' },
+  { id: 2, eventId: 1, content: '空き店舗をもっと若い人が借りやすい仕組みがあったら、面白い店が増えるんじゃないか。', themes: ['まちづくり','若者'], age: '20代', area: '日暮里', highlighted: false, status: '集約済み' },
+  { id: 3, eventId: 1, content: '近所の人と話す場所が、実はあまりない。こういう小さな場が、もっとあると嬉しい。', themes: ['まちづくり'], age: '40代', area: '町屋', highlighted: true, status: '集約済み' },
+];
+
+const TOTAL_GOAL = CONFIG.TOTAL_GOAL;
+let ACHIEVED = 1; // 開催済み件数。Sheetsからの取得後に再計算
+
+// ============================================================
+// データ取得（Google Sheets → opensheet経由）
+// ============================================================
+async function loadData() {
+  // SHEET_ID未設定 = デモデータで起動
+  if (!CONFIG.SHEET_ID) {
+    EVENTS = FALLBACK_EVENTS;
+    VOICES = FALLBACK_VOICES;
+    return;
+  }
+  try {
+    const base = `https://opensheet.elk.sh/${CONFIG.SHEET_ID}`;
+    const [evRows, vcRows] = await Promise.all([
+      fetch(`${base}/events`).then(r => r.json()),
+      fetch(`${base}/voices`).then(r => r.json()),
+    ]);
+    EVENTS = (Array.isArray(evRows) ? evRows : [])
+      .filter(r => r['公開'] === 'TRUE' || r['公開'] === '公開')
+      .map(transformEvent);
+    VOICES = (Array.isArray(vcRows) ? vcRows : [])
+      .filter(r => r['公開'] === 'TRUE' || r['公開'] === '公開')
+      .map(transformVoice);
+    ACHIEVED = EVENTS.filter(e => e.status === '終了').length;
+  } catch (err) {
+    console.warn('Google Sheetsからの取得に失敗。デモデータで表示します。', err);
+    EVENTS = FALLBACK_EVENTS;
+    VOICES = FALLBACK_VOICES;
+  }
+}
+
+function transformEvent(r) {
+  return {
+    id: parseInt(r.id) || 0,
+    title: r['タイトル'] || '',
+    area: r['地域'] || '',
+    date: r['日付'] || '',
+    time: r['時間'] || '',
+    format: r['形式'] || '対面',
+    venue: r['会場'] || '',
+    themes: (r['テーマ'] || '').split(',').map(s => s.trim()).filter(Boolean),
+    host: r['主催'] || '',
+    capacity: parseInt(r['定員']) || 0,
+    applied: parseInt(r['申込数']) || 0,
+    status: r['ステータス'] || '募集中',
+    lat: parseFloat(r['緯度']) || 35.7370,
+    lng: parseFloat(r['経度']) || 139.7820,
+    desc: r['説明'] || '',
+  };
+}
+
+// 声フォームのURLを組み立てる（対話会IDを事前入力）
+function voiceFormUrl(eventId) {
+  if (!CONFIG.VOICE_FORM_EVENT_ID_ENTRY) return CONFIG.VOICE_FORM;
+  const sep = CONFIG.VOICE_FORM.includes('?') ? '&' : '?';
+  return `${CONFIG.VOICE_FORM}${sep}usp=pp_url&${CONFIG.VOICE_FORM_EVENT_ID_ENTRY}=${eventId}`;
+}
+
+function transformVoice(r) {
+  return {
+    id: parseInt(r.id) || 0,
+    eventId: parseInt(r['対話会ID']) || 0,
+    content: r['内容'] || '',
+    themes: (r['テーマ'] || '').split(',').map(s => s.trim()).filter(Boolean),
+    age: r['年代'] || '',
+    area: r['地域'] || '',
+    highlighted: r['響いた声'] === 'TRUE' || r['響いた声'] === 'true',
+    status: r['ステータス'] || '集約中',
+  };
+}
+
+// ===================== ROUTING =====================
+let currentEventId = null;
+function navigate(page, param) {
+  if (page === 'event-detail') currentEventId = param;
+  if (page === 'voice') currentEventId = param;
+  document.querySelectorAll('.nav-link').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  switch(page) {
+    case 'top': renderTop(main); break;
+    case 'map': renderMap(main); break;
+    case 'events': renderEvents(main); break;
+    case 'event-detail': renderEventDetail(main); break;
+    case 'voice': renderVoice(main); break;
+    case 'progress': renderProgress(main); break;
+    case 'about': renderAbout(main); break;
+    case 'hostguide': renderHostGuide(main); break;
+    default: renderTop(main);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function themeChips(themes) {
+  return themes.map(t => `<span class="chip ${THEMES[t] || 'chip-gray'}">${t}</span>`).join(' ');
+}
+function statusChip(status) {
+  const map = { '募集中': 'chip-pine', '満員': 'chip-mustard', '終了': 'chip-gray', '準備中': 'chip-vermilion' };
+  return `<span class="chip ${map[status]||'chip-gray'}">${status}</span>`;
+}
+function formatChip(format) {
+  const map = { '対面': 'chip-indigo', 'オンライン': 'chip-purple', 'ハイブリッド': 'chip-pink' };
+  return `<span class="chip ${map[format]||'chip-gray'}">${format}</span>`;
+}
+
+// ===================== TOP =====================
+function renderTop(main) {
+  const upcoming = EVENTS.filter(e => e.status !== '終了').slice(0, 4);
+  const recentVoices = VOICES.slice(0, 3);
+  main.innerHTML = `
+  <!-- Hero -->
+  <section class="hero-bg overflow-hidden relative">
+    <div class="hero-pattern"></div>
+    <div class="max-w-6xl mx-auto px-4 py-14 md:py-20 relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      <div>
+        <span class="stamp mb-5 inline-block">2026 START</span>
+        <h1 class="font-mincho text-3xl md:text-5xl font-black leading-tight mb-5 mt-3">
+          まちの<span class="accent-underline">「なにか」</span>を、<br/>
+          いつもの仲間と語ろう。
+        </h1>
+        <p class="text-base md:text-lg text-sumi leading-relaxed mb-7">
+          なにかし堂は、荒川区内 <span class="font-bold text-vermilion">100か所</span> で<br class="hidden md:inline"/>
+          小さな対話の輪をつくる試みを、2026年に始めました。<br/>
+          家の近くで、いつもの仲間と。
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <button class="btn btn-vermilion" onclick="navigate('events')">対話会を探す →</button>
+          <button class="btn btn-outline" onclick="navigate('hostguide')">対話会を開いてみる</button>
+        </div>
+      </div>
+      <div class="bg-warm-card border border-warm-border rounded-2xl p-7">
+        <div class="text-center">
+          <div class="text-xs text-sumi mb-1 tracking-widest">これまでに開催</div>
+          <div class="counter-num">${ACHIEVED}</div>
+          <div class="text-sm text-sumi mt-1">／ 100か所</div>
+          <div class="mt-5">
+            <div class="flex justify-between text-xs text-sumi mb-2">
+              <span>達成 ${ACHIEVED}</span>
+              <span>残り ${TOTAL_GOAL-ACHIEVED}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${ACHIEVED/TOTAL_GOAL*100}%"></div></div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-6 text-center">
+            <div class="bg-cream rounded-lg py-3"><div class="text-2xl font-bold text-indigo-dark font-mincho">${EVENTS.filter(e=>e.status!=='終了').length}</div><div class="text-xs text-sumi">開催予定</div></div>
+            <div class="bg-cream rounded-lg py-3"><div class="text-2xl font-bold text-indigo-dark font-mincho">${VOICES.length}</div><div class="text-xs text-sumi">届いた声</div></div>
+            <div class="bg-cream rounded-lg py-3"><div class="text-2xl font-bold text-indigo-dark font-mincho">2</div><div class="text-xs text-sumi">協力ホスト</div></div>
+          </div>
+          <div class="mt-5 pt-5 border-t border-warm-border text-xs text-sumi leading-relaxed">
+            まだ始まったばかり。<br/>
+            <span class="text-vermilion font-semibold">あなたの参加が、最初の一歩になります。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About snippet -->
+  <section class="max-w-4xl mx-auto px-4 py-12 text-center">
+    <div class="stamp mb-4">なにかし堂とは</div>
+    <h2 class="font-mincho text-2xl md:text-3xl font-bold mb-4">荒川区を拠点とする、小さな任意団体です。</h2>
+    <p class="text-sumi leading-loose">
+      区が掲げる「基本構想2040」を見据え、まちに住む一人ひとりの声を、もっと身近な場所で集めたい。<br/>
+      そう考えた有志数名で2026年に立ち上げました。<br/>
+      最終的には区との連携を目指していますが、まずは <span class="font-bold text-indigo-dark">私たち自身が試してみる</span> ところから始めます。
+    </p>
+    <button class="btn btn-ghost mt-5" onclick="navigate('about')">私たちについてもっと知る →</button>
+  </section>
+
+  <!-- 3 Actions -->
+  <section class="max-w-6xl mx-auto px-4 py-8">
+    <h2 class="section-title">参加のしかた、3つ</h2>
+    <p class="section-sub">あなたに合うスタイルで、まちと関わってみませんか</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="card card-hover p-6 cursor-pointer" onclick="navigate('events')">
+        <div class="w-12 h-12 rounded-lg bg-indigo-light text-indigo flex items-center justify-center mb-4 font-mincho text-2xl font-bold">一</div>
+        <h3 class="font-mincho font-bold text-lg mb-2">対話会に参加する</h3>
+        <p class="text-sumi text-sm leading-relaxed">お住まいの地域や関心のあるテーマから、参加できる対話会を探してみましょう。</p>
+        <div class="mt-4 text-indigo-dark font-semibold text-sm">参加する →</div>
+      </div>
+      <div class="card card-hover p-6 cursor-pointer" onclick="navigate('hostguide')">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4 font-mincho text-2xl font-bold" style="background:#fbecd2;color:#8b5e1f">二</div>
+        <h3 class="font-mincho font-bold text-lg mb-2">対話会を開く</h3>
+        <p class="text-sumi text-sm leading-relaxed">町会・PTA・有志グループ・あなた個人。10分程度で対話会を登録できます。</p>
+        <div class="mt-4 text-indigo-dark font-semibold text-sm">ホストになる →</div>
+      </div>
+      <div class="card card-hover p-6 cursor-pointer" onclick="navigate('progress')">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4 font-mincho text-2xl font-bold" style="background:#dde9df;color:#3d6749">三</div>
+        <h3 class="font-mincho font-bold text-lg mb-2">届いた声を見る</h3>
+        <p class="text-sumi text-sm leading-relaxed">これまでの対話会で集まった声を、一覧でご覧いただけます。</p>
+        <div class="mt-4 text-indigo-dark font-semibold text-sm">進捗を見る →</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map preview -->
+  <section class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-end justify-between mb-4">
+      <div>
+        <div class="section-title">対話会マップ</div>
+        <div class="section-sub">区内で開かれる対話会を地図で見る</div>
+      </div>
+      <button class="btn-ghost btn text-sm py-2" onclick="navigate('map')">マップを開く →</button>
+    </div>
+    <div id="topMap" class="card overflow-hidden" style="height:340px"></div>
+  </section>
+
+  <!-- Recent events -->
+  <section class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-end justify-between mb-4">
+      <div>
+        <div class="section-title">最近の対話会</div>
+        <div class="section-sub">参加申込を受け付けています</div>
+      </div>
+      <button class="btn-ghost btn text-sm py-2" onclick="navigate('events')">すべて見る →</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${upcoming.map(eventCard).join('')}
+    </div>
+  </section>
+
+  <!-- Voices -->
+  <section class="bg-indigo-light py-14 mt-12">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <div class="section-title">対話会から届いた声</div>
+          <div class="section-sub">まだ少ないですが、ここから始まります</div>
+        </div>
+        <button class="btn-ghost btn text-sm py-2" onclick="navigate('progress')">もっと見る →</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        ${recentVoices.map(v => `
+          <div class="voice-bubble">
+            <div class="voice-bubble-content">
+              <p class="text-sm leading-relaxed">${v.content}</p>
+              <div class="flex items-center gap-2 mt-3 text-xs text-sumi">
+                <span>${v.age} · ${v.area}</span>
+                <span class="ml-auto">${themeChips(v.themes)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </section>
+
+  <!-- Bridge -->
+  <section class="max-w-6xl mx-auto px-4 py-12">
+    <div class="card p-7 md:p-10 text-center" style="background:linear-gradient(135deg, var(--warm-card), var(--cream))">
+      <div class="stamp mb-4">これからのこと</div>
+      <h3 class="font-mincho font-bold text-2xl mb-3">いずれは、区の基本構想に。</h3>
+      <p class="text-sumi leading-relaxed mb-6 max-w-2xl mx-auto">
+        ここで集まった声は、なにかし堂が責任をもって整理し、<br class="hidden md:inline"/>
+        将来的に荒川区基本構想審議会への提案として届ける予定です。<br/>
+        まずは小さく始め、確かな手応えを携えて、一歩ずつ進めていきます。
+      </p>
+      <button class="btn btn-indigo" onclick="navigate('about')">なにかし堂のビジョンを見る →</button>
+    </div>
+  </section>
+  `;
+  setTimeout(() => initMiniMap('topMap'), 100);
+}
+
+function eventCard(e) {
+  return `
+  <div class="card card-hover p-5 cursor-pointer" onclick="navigate('event-detail', ${e.id})">
+    <div class="flex items-start justify-between gap-3 mb-2">
+      <div class="flex flex-wrap gap-1">${themeChips(e.themes)}</div>
+      ${statusChip(e.status)}
+    </div>
+    <h3 class="font-mincho font-bold text-base mb-2">${e.title}</h3>
+    <div class="text-xs text-sumi space-y-1">
+      <div>📅 ${e.date} ${e.time}</div>
+      <div>📍 ${e.venue}（${e.area}）</div>
+      <div>👥 ${e.applied} / ${e.capacity}人</div>
+    </div>
+    <div class="mt-3 flex items-center gap-2">${formatChip(e.format)}<span class="text-xs text-sumi ml-auto">主催: ${e.host}</span></div>
+  </div>
+  `;
+}
+
+// ===================== MAP =====================
+function renderMap(main) {
+  main.innerHTML = `
+  <section class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+      <div>
+        <div class="section-title">対話会マップ</div>
+        <div class="section-sub">区内で開催される対話会を地図で確認できます</div>
+      </div>
+      <div class="bg-warm-card border border-warm-border rounded-lg px-5 py-3 flex items-center gap-3">
+        <div>
+          <div class="text-xs text-sumi">100か所まで</div>
+          <div class="font-mincho font-bold text-2xl leading-none text-vermilion">あと ${TOTAL_GOAL - ACHIEVED}</div>
+        </div>
+        <div class="w-24"><div class="progress-bar"><div class="progress-fill" style="width:${ACHIEVED/TOTAL_GOAL*100}%"></div></div></div>
+      </div>
+    </div>
+
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="text-xs font-semibold text-sumi mr-1">テーマ:</span>
+        ${['すべて',...Object.keys(THEMES)].map((t,i) => `<button class="filter-pill ${i===0?'active':''}">${t}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="md:col-span-2">
+        <div id="mainMap" class="card overflow-hidden" style="height: 560px"></div>
+        <div class="flex items-center gap-4 mt-3 text-xs text-sumi">
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:var(--indigo)"></span>開催予定</div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:var(--pine)"></span>開催済み</div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:var(--mustard)"></span>準備中</div>
+        </div>
+      </div>
+      <div class="card p-4 max-h-[560px] overflow-y-auto">
+        <h3 class="font-mincho font-bold mb-3">この地図の対話会 (${EVENTS.length}件)</h3>
+        <div class="space-y-3">
+          ${EVENTS.map(e => `
+            <div class="border-l-2 pl-3 py-1 cursor-pointer hover:bg-cream rounded-r" style="border-color:var(--indigo)" onclick="navigate('event-detail', ${e.id})">
+              <div class="font-semibold text-sm leading-tight">${e.title}</div>
+              <div class="text-xs text-sumi mt-1">${e.date} · ${e.area}</div>
+              <div class="flex flex-wrap gap-1 mt-1">${themeChips(e.themes)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  </section>
+  `;
+  setTimeout(initMainMap, 100);
+}
+
+function initMiniMap(elId) {
+  const map = L.map(elId, { zoomControl: false, scrollWheelZoom: false, dragging: false, doubleClickZoom: false }).setView([35.7370, 139.7820], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(map);
+  EVENTS.forEach(e => {
+    const color = e.status === '終了' ? '#5a8a6b' : e.status === '準備中' ? '#d99332' : '#2c4a6b';
+    L.circleMarker([e.lat, e.lng], { radius: 9, fillColor: color, color: 'white', weight: 2, fillOpacity: 0.9 }).addTo(map);
+  });
+}
+
+function initMainMap() {
+  const map = L.map('mainMap').setView([35.7380, 139.7820], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(map);
+  EVENTS.forEach(e => {
+    const color = e.status === '終了' ? '#5a8a6b' : e.status === '準備中' ? '#d99332' : '#2c4a6b';
+    const marker = L.circleMarker([e.lat, e.lng], { radius: 13, fillColor: color, color: 'white', weight: 3, fillOpacity: 0.9 }).addTo(map);
+    marker.bindPopup(`
+      <div style="font-weight:700;color:#1d3550;margin-bottom:4px">${e.title}</div>
+      <div style="font-size:12px;color:#6b5d52">${e.date} ${e.time}<br/>${e.venue}（${e.area}）</div>
+      <div style="margin-top:6px"><a href="#" onclick="navigate('event-detail',${e.id});return false;" style="color:#2c4a6b;font-weight:600;text-decoration:underline">詳細を見る →</a></div>
+    `);
+  });
+}
+
+// ===================== EVENTS LIST =====================
+function renderEvents(main) {
+  main.innerHTML = `
+  <section class="max-w-6xl mx-auto px-4 py-8">
+    <div class="section-title">対話会を探す</div>
+    <div class="section-sub">${EVENTS.length}件の対話会があります</div>
+
+    <div class="card p-4 mb-5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="label text-xs">キーワード</label>
+          <input class="input text-sm" placeholder="例：子育て、町屋..." />
+        </div>
+        <div>
+          <label class="label text-xs">日程</label>
+          <select class="select text-sm"><option>いつでも</option><option>1週間以内</option><option>1か月以内</option></select>
+        </div>
+        <div>
+          <label class="label text-xs">地域</label>
+          <select class="select text-sm"><option>すべて</option>${AREAS.map(a=>`<option>${a}</option>`).join('')}</select>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${EVENTS.map(eventCard).join('')}
+    </div>
+
+    <div class="mt-8 card p-6 text-center" style="background:var(--indigo-light)">
+      <h3 class="font-mincho font-bold text-lg mb-2">あなたも対話会を開いてみませんか？</h3>
+      <p class="text-sumi text-sm mb-4">家族・友人・近所の方を集めての小さな会で大丈夫です。</p>
+      <button class="btn btn-indigo" onclick="navigate('hostguide')">ホストガイドを見る →</button>
+    </div>
+  </section>
+  `;
+}
+
+// ===================== EVENT DETAIL =====================
+function renderEventDetail(main) {
+  const e = EVENTS.find(x => x.id === currentEventId) || EVENTS[0];
+  const eventVoices = VOICES.filter(v => v.eventId === e.id);
+  main.innerHTML = `
+  <section class="max-w-4xl mx-auto px-4 py-8">
+    <button class="btn-ghost btn text-sm py-2" onclick="navigate('events')">← 一覧に戻る</button>
+
+    <div class="card p-6 md:p-8 mt-4">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        ${themeChips(e.themes)}
+        ${formatChip(e.format)}
+        ${statusChip(e.status)}
+      </div>
+      <h1 class="font-mincho text-2xl md:text-3xl font-bold mb-4">${e.title}</h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-cream rounded-lg p-5 mb-6">
+        <div><div class="text-xs text-sumi mb-1">📅 開催日時</div><div class="font-semibold">${e.date} ${e.time}</div></div>
+        <div><div class="text-xs text-sumi mb-1">📍 会場</div><div class="font-semibold">${e.venue}</div><div class="text-xs text-sumi">${e.area}エリア</div></div>
+        <div><div class="text-xs text-sumi mb-1">👥 定員</div><div class="font-semibold">${e.capacity}人 (申込 ${e.applied}人)</div></div>
+        <div><div class="text-xs text-sumi mb-1">🙋 主催</div><div class="font-semibold">${e.host}</div></div>
+      </div>
+
+      <h2 class="font-mincho font-bold text-lg mb-2">この対話会について</h2>
+      <p class="leading-relaxed mb-6 text-sumi">${e.desc}</p>
+
+      <div id="detailMap" class="rounded-lg overflow-hidden mb-6" style="height:240px"></div>
+
+      ${e.status === '募集中' ? `
+        <div class="card p-5" style="background:#fff4e6;border-color:#f0d9b3">
+          <h3 class="font-mincho font-bold text-lg mb-3">参加申込</h3>
+          <p class="text-sm text-sumi mb-4">下記ボタンから Google フォームへ進んで、お申込ください（メールアドレスのみで簡単に申込できます）。</p>
+          <a class="btn btn-vermilion w-full md:w-auto" href="${CONFIG.PARTICIPATE_FORM}" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            参加申込フォームへ
+          </a>
+          <div class="text-xs text-sumi mt-3">※ 参加確認メールはなにかし堂より個別にお送りします。当日の意見投稿用URLもメールでお届けします。</div>
+        </div>
+      ` : e.status === '満員' ? `
+        <div class="card p-5 text-center"><div class="font-bold mb-2">この対話会は定員に達しました</div><button class="btn btn-outline">キャンセル待ちに登録</button></div>
+      ` : e.status === '準備中' ? `
+        <div class="card p-5 text-center" style="background:#fff4e6"><div class="font-mincho font-bold mb-2">この対話会は準備中です</div><p class="text-sm text-sumi">日時・会場が決まり次第、ご案内します。</p></div>
+      ` : `
+        <div class="card p-5">
+          <div class="font-mincho font-bold mb-3">📝 対話会で出た声</div>
+          <div class="space-y-3">
+            ${eventVoices.length ? eventVoices.map(v => `
+              <div class="voice-bubble"><div class="voice-bubble-content">
+                <p class="text-sm leading-relaxed">${v.content}</p>
+                <div class="flex items-center gap-2 mt-2 text-xs text-sumi"><span>${v.age} · ${v.area}</span><span class="ml-auto">${themeChips(v.themes)}</span></div>
+              </div></div>
+            `).join('') : '<div class="text-sumi text-sm">声を集約中です</div>'}
+          </div>
+          <button class="btn btn-outline w-full mt-4 text-sm py-2" onclick="navigate('voice', ${e.id})">あなたの声を投稿する</button>
+        </div>
+      `}
+    </div>
+  </section>
+  `;
+  setTimeout(() => {
+    const m = L.map('detailMap').setView([e.lat, e.lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(m);
+    L.marker([e.lat, e.lng]).addTo(m).bindPopup(e.venue);
+  }, 100);
+}
+
+// ===================== VOICE =====================
+function renderVoice(main) {
+  const e = EVENTS.find(x => x.id === currentEventId) || EVENTS[0];
+  main.innerHTML = `
+  <section class="max-w-2xl mx-auto px-4 py-8">
+    <button class="btn-ghost btn text-sm py-2" onclick="navigate('event-detail', ${e.id})">← 対話会詳細に戻る</button>
+    <div class="card p-6 md:p-8 mt-4">
+      <div class="text-sm text-sumi mb-1">対話会:</div>
+      <div class="font-mincho font-bold text-lg mb-4">${e.title}</div>
+
+      <h1 class="font-mincho text-2xl font-bold mb-2">あなたの声を、聞かせてください。</h1>
+      <p class="text-sm text-sumi mb-6 leading-relaxed">対話会で話したこと、感じたこと、まちへの願い。<br/>いただいた声はなにかし堂で大切に整理し、いずれ区の審議会へお届けする予定です。</p>
+
+      <div class="card p-5 mb-5 text-center" style="background:#fff4e6">
+        <div class="font-mincho font-bold mb-2">投稿は Google フォームで受け付けます</div>
+        <p class="text-sm text-sumi mb-4">下記ボタンから投稿フォームへ進んでください。<br/>所要時間：1〜3分</p>
+        <a class="btn btn-vermilion" href="${voiceFormUrl(e.id)}" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          投稿フォームを開く
+        </a>
+      </div>
+
+      <details class="card p-4 mb-4">
+        <summary class="font-semibold text-sm flex items-center justify-between">
+          <span>フォームで聞かれる項目をプレビュー</span>
+          <span class="text-mustard text-xl">+</span>
+        </summary>
+      <form class="space-y-5 mt-4" onsubmit="event.preventDefault();window.open(CONFIG.VOICE_FORM, '_blank');">
+        <div>
+          <label class="label">声・意見の内容 <span class="req">必須</span></label>
+          <textarea class="textarea" rows="6" placeholder="例：もっと気軽に集まれる場所が欲しい..." maxlength="300" required></textarea>
+          <div class="text-xs text-sumi mt-1 text-right">最大300文字</div>
+        </div>
+        <div>
+          <label class="label">テーマ <span class="req">必須</span></label>
+          <div class="flex flex-wrap gap-2">
+            ${Object.keys(THEMES).map(t => `<label class="filter-pill cursor-pointer"><input type="checkbox" class="mr-1" style="accent-color:#2c4a6b"/> ${t}</label>`).join('')}
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><label class="label text-xs">年代 <span class="opt">任意</span></label><select class="select text-sm"><option>選択しない</option><option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代</option><option>60代</option><option>70代以上</option></select></div>
+          <div><label class="label text-xs">地域 <span class="opt">任意</span></label><select class="select text-sm"><option>選択しない</option>${AREAS.map(a=>`<option>${a}</option>`).join('')}</select></div>
+          <div><label class="label text-xs">立場 <span class="opt">任意</span></label><select class="select text-sm"><option>選択しない</option><option>子育て中</option><option>学生</option><option>働き盛り</option><option>高齢者</option><option>外国ルーツ</option></select></div>
+        </div>
+        <div>
+          <label class="label">フィードバックメール <span class="opt">任意</span></label>
+          <input class="input" type="email" placeholder="メールアドレス（あなたの声がどう活かされたかをお知らせします）" />
+          <div class="text-xs text-sumi mt-1">※ 個人を特定する情報としては使用しません。</div>
+        </div>
+        <div class="bg-indigo-light rounded-lg p-3 text-xs text-sumi leading-relaxed">
+          ⓘ 投稿された内容は、個人を特定できないかたちで公開する場合があります。<br/>
+          ⓘ なにかし堂では区への提案資料に活用するため、CSV・PDF形式で保管します。
+        </div>
+        <div class="text-xs text-sumi text-center pt-2">※ プレビューです。実際の投稿は上のボタンから Google フォームで送信してください。</div>
+      </form>
+      </details>
+    </div>
+  </section>
+  `;
+}
+
+// ===================== PROGRESS =====================
+function renderProgress(main) {
+  main.innerHTML = `
+  <section class="max-w-6xl mx-auto px-4 py-8">
+    <div class="section-title">これまでの歩み</div>
+    <div class="section-sub">小さな数字ですが、確実な一歩です</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="card p-6 text-center">
+        <div class="text-sm text-sumi mb-2">対話会の開催</div>
+        <div class="font-mincho text-5xl font-black text-indigo-dark">${ACHIEVED}<span class="text-xl text-sumi">/100</span></div>
+        <div class="progress-bar mt-3"><div class="progress-fill" style="width:${ACHIEVED/TOTAL_GOAL*100}%"></div></div>
+        <div class="text-xs text-sumi mt-2">残り ${TOTAL_GOAL-ACHIEVED}か所</div>
+      </div>
+      <div class="card p-6 text-center">
+        <div class="text-sm text-sumi mb-2">届いた声</div>
+        <div class="font-mincho text-5xl font-black text-mustard">${VOICES.length}</div>
+        <div class="text-xs text-sumi mt-3">うち、特に響いた声 ${VOICES.filter(v=>v.highlighted).length}件</div>
+      </div>
+      <div class="card p-6 text-center">
+        <div class="text-sm text-sumi mb-2">協力ホスト</div>
+        <div class="font-mincho text-5xl font-black text-pine">2</div>
+        <div class="text-xs text-sumi mt-3">なにかし堂のほか、町屋・ご近所ママの会</div>
+      </div>
+    </div>
+
+    <div class="card p-6 mb-8">
+      <h3 class="font-mincho font-bold mb-4">声が育つ流れ</h3>
+      <p class="text-sumi text-sm mb-4 leading-relaxed">
+        対話会で集まった声は、なにかし堂で大切に整理し、テーマごとにまとめ、いずれ荒川区基本構想審議会への提案として届けます。<br/>
+        まだ初期段階で、審議会への提出は未実施ですが、半年後を目標に第1次レポートをまとめる予定です。
+      </p>
+      <canvas id="flowChart" style="max-height:200px"></canvas>
+    </div>
+
+    <h2 class="section-title">届いた声 (${VOICES.length}件)</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${VOICES.map(v => {
+        const e = EVENTS.find(x => x.id === v.eventId);
+        return `
+        <div class="voice-bubble">
+          <div class="voice-bubble-content">
+            ${v.highlighted ? '<span class="chip chip-mustard mb-2">★ 響いた声</span>' : ''}
+            <p class="text-sm leading-relaxed">${v.content}</p>
+            <div class="flex flex-wrap items-center gap-2 mt-3 text-xs text-sumi">
+              <span>${v.age} · ${v.area}</span><span>·</span>
+              <span class="text-indigo-dark">${e ? e.title : ''}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+              ${themeChips(v.themes)}
+              <span class="chip chip-pine ml-auto">${v.status}</span>
+            </div>
+          </div>
+        </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div class="mt-10 card p-6 text-center" style="background:linear-gradient(135deg,var(--indigo-light), var(--cream))">
+      <div class="font-mincho font-bold text-lg mb-2">あなたの声も、ここに加わります。</div>
+      <p class="text-sm text-sumi mb-4">対話会に参加するか、自分で開くか。どちらでも歓迎です。</p>
+      <div class="flex flex-wrap gap-3 justify-center">
+        <button class="btn btn-indigo" onclick="navigate('events')">対話会を探す</button>
+        <button class="btn btn-outline" onclick="navigate('hostguide')">ホストになる</button>
+      </div>
+    </div>
+  </section>
+  `;
+  setTimeout(() => {
+    const ctx = document.getElementById('flowChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['届いた声','テーマ整理済み','レポート化','区への提案'],
+        datasets: [{
+          data: [VOICES.length, 2, 0, 0],
+          backgroundColor: ['#2c4a6b','#d99332','#5a8a6b','#c8533c'],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }, 100);
+}
+
+// ===================== ABOUT =====================
+function renderAbout(main) {
+  main.innerHTML = `
+  <section class="max-w-3xl mx-auto px-4 py-8">
+    <div class="stamp mb-3">なにかし堂について</div>
+    <h1 class="font-mincho text-3xl font-bold mb-5">まちの「なにか」を、一緒に育てる任意団体です。</h1>
+
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-mincho font-bold text-xl mb-3">なぜ始めたか</h2>
+      <p class="leading-loose text-sumi mb-4">
+        荒川区が掲げる「基本構想2040」。区民100人会議のような取り組みは大切ですが、もっと身近な場所、いつものメンバーで話せる場所があれば、まだ届いていない声があるはずだと感じました。
+      </p>
+      <p class="leading-loose text-sumi">
+        「対話会100か所」という大きな数字は、行政だけで作るには時間がかかります。だから、まず私たちが小さく試して、形になりそうだと分かった段階で区にお声がけする ─ そのために、なにかし堂を立ち上げました。
+      </p>
+    </div>
+
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-mincho font-bold text-xl mb-4">わたしたちの約束</h2>
+      <div class="space-y-4">
+        <div class="flex gap-4">
+          <div class="step-circle">一</div>
+          <div class="flex-1 pt-1">
+            <h3 class="font-bold mb-1">声を、ちゃんと整理する</h3>
+            <p class="text-sm text-sumi leading-relaxed">対話会で集まった声は、ただ集めるだけでなく、テーマごとに整理し、誰でも見られる形で公開します。</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="step-circle">二</div>
+          <div class="flex-1 pt-1">
+            <h3 class="font-bold mb-1">届ける、を諦めない</h3>
+            <p class="text-sm text-sumi leading-relaxed">半年に一度、整理した声を「対話レポート」として荒川区企画経営課に届けます。受け取られた事実も、このサイトで公開します。</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="step-circle">三</div>
+          <div class="flex-1 pt-1">
+            <h3 class="font-bold mb-1">透明に、運営する</h3>
+            <p class="text-sm text-sumi leading-relaxed">運営費・参加者数・声の処理状況は、すべて公開します。任意団体である以上、信頼が私たちの土台です。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-mincho font-bold text-xl mb-3">運営メンバー</h2>
+      <p class="text-sumi mb-4 text-sm">2026年現在、有志メンバー数名で運営しています。</p>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        ${[
+          {name:'代表 ・ A.K.', role:'町屋在住・編集者'},
+          {name:'B.S.', role:'西日暮里在住・デザイナー'},
+          {name:'C.T.', role:'日暮里在住・エンジニア'},
+        ].map(m => `
+          <div class="text-center">
+            <div class="w-20 h-20 rounded-full mx-auto mb-2 flex items-center justify-center font-mincho text-2xl font-bold" style="background:var(--indigo-light);color:var(--indigo-dark)">${m.name.charAt(0)}</div>
+            <div class="font-bold text-sm">${m.name}</div>
+            <div class="text-xs text-sumi">${m.role}</div>
+          </div>
+        `).join('')}
+      </div>
+      <p class="text-xs text-sumi mt-4">※ 一緒に運営してくれる方を募集しています。お問い合わせフォームよりご連絡ください。</p>
+    </div>
+
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-mincho font-bold text-xl mb-3">運営方針・財源</h2>
+      <ul class="space-y-2 text-sm text-sumi list-disc pl-5 leading-relaxed">
+        <li>本サイトは Vercel・Notion・Google サービスの無料枠で運営しています（月額0円）</li>
+        <li>対話会のお茶代等は、当面はメンバーの持ち出しで対応します</li>
+        <li>将来的にはクラウドファンディングや助成金を検討します</li>
+        <li>収支が発生した場合は、半期ごとに本サイトで公開します</li>
+      </ul>
+    </div>
+
+    <div class="card p-6 md:p-8 text-center" style="background:var(--indigo);color:white">
+      <h2 class="font-mincho font-bold text-xl mb-2">一緒にまちのことを話しませんか？</h2>
+      <p class="text-sm opacity-90 mb-4">参加でも、運営でも、ホストでも。どんな関わり方でも歓迎です。</p>
+      <a href="mailto:hello@nanikashido.example" class="btn btn-mustard">メールで連絡する</a>
+    </div>
+  </section>
+  `;
+}
+
+// ===================== HOST GUIDE =====================
+function renderHostGuide(main) {
+  main.innerHTML = `
+  <section class="max-w-4xl mx-auto px-4 py-8">
+    <div class="stamp mb-3">ホストになる</div>
+    <h1 class="font-mincho text-3xl font-bold mb-2">家族や友人と、小さな対話会を。</h1>
+    <p class="text-sumi mb-8">特別な準備は要りません。なにかし堂がサポートします。</p>
+
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-mincho font-bold text-xl mb-4">対話会の開き方 5ステップ</h2>
+      <div class="space-y-5">
+        ${[
+          {n:'一', t:'なにかし堂に連絡する', d:'下記フォームからご連絡ください。なにかし堂のメンバーがオンラインで30分ほどお話を伺います。'},
+          {n:'二', t:'対話会を企画する', d:'5〜15人くらいの規模で、お住まいの近所や、関心のあるテーマで企画します。場所はカフェ・自宅・公民館などお好きな場所で。'},
+          {n:'三', t:'サイトに登録する', d:'なにかし堂が代わりにサイトに掲載します。あなたが直接システムを操作する必要はありません。'},
+          {n:'四', t:'対話会を開く', d:'当日は1〜2時間程度。なにかし堂が「対話のヒントカード」をお渡しします。会話に困ったときの助けになります。'},
+          {n:'五', t:'声を集める', d:'対話会の最後に、QRコードで参加者の声を集めます。または、ホストがメモ書きをまとめて投稿することも可能です。'},
+        ].map(s => `
+          <div class="flex gap-4">
+            <div class="step-circle">${s.n}</div>
+            <div class="flex-1 pt-1">
+              <h3 class="font-mincho font-bold mb-1">${s.t}</h3>
+              <p class="text-sm text-sumi leading-relaxed">${s.d}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="card p-5">
+        <div class="text-3xl mb-2 font-mincho text-mustard">茶</div>
+        <h3 class="font-mincho font-bold mb-1">お茶代について</h3>
+        <p class="text-sm text-sumi leading-relaxed">PoC期はホスト・参加者の自己負担でお願いしています。会場のカフェで各自一杯程度で、十分な対話の場になります。</p>
+      </div>
+      <div class="card p-5">
+        <div class="text-3xl mb-2 font-mincho text-pine">場</div>
+        <h3 class="font-mincho font-bold mb-1">会場について</h3>
+        <p class="text-sm text-sumi leading-relaxed">カフェの一角・ご自宅・町会の集会所・公民館など。なにかし堂で会場のご相談に乗ることもできます。</p>
+      </div>
+      <div class="card p-5">
+        <div class="text-3xl mb-2 font-mincho text-indigo">話</div>
+        <h3 class="font-mincho font-bold mb-1">進め方について</h3>
+        <p class="text-sm text-sumi leading-relaxed">難しい進行は不要です。「最近気になっていること」から自然に話すだけで対話になります。なにかし堂のヒントカードもお使いいただけます。</p>
+      </div>
+      <div class="card p-5">
+        <div class="text-3xl mb-2 font-mincho text-vermilion">声</div>
+        <h3 class="font-mincho font-bold mb-1">声の集め方</h3>
+        <p class="text-sm text-sumi leading-relaxed">QRコード／紙のメモ／ホストの代筆、いずれもOKです。なにかし堂で取りまとめます。</p>
+      </div>
+    </div>
+
+    <h2 class="section-title">よくある質問</h2>
+    <div class="space-y-2 mb-8">
+      ${[
+        {q:'参加人数は何人くらいが良いですか？', a:'5〜15人くらいが、全員が話しやすい人数です。それ以上の場合は、グループに分けることをおすすめします。'},
+        {q:'初めてで進行に不安があります', a:'なにかし堂のメンバーが立ち会うこともできます。お気軽にご相談ください。'},
+        {q:'集めた声はどう扱われますか？', a:'なにかし堂がテーマ別に整理します。半年に一度、レポートにまとめて荒川区へお届けする予定です。個人を特定する情報は除外します。'},
+        {q:'なにかし堂は本当に区と連携しているのですか？', a:'現時点では正式な連携はしていません。実証モデルとして実績を積み、いずれ区への提案を行う予定です。透明にお伝えしています。'},
+        {q:'費用はかかりますか？', a:'参加・ホストとも、なにかし堂への費用は一切かかりません。会場費・お茶代のみご負担ください。'},
+      ].map(f => `
+        <details class="card p-4">
+          <summary class="font-semibold flex items-center justify-between">
+            <span>Q. ${f.q}</span>
+            <span class="text-mustard text-xl">+</span>
+          </summary>
+          <p class="text-sm text-sumi mt-3 leading-relaxed">A. ${f.a}</p>
+        </details>
+      `).join('')}
+    </div>
+
+    <div class="card p-6 md:p-8 text-center" style="background:var(--vermilion);color:white">
+      <h3 class="font-mincho font-bold text-2xl mb-2">あなたのまわりから、まちが変わる。</h3>
+      <p class="opacity-95 mb-5">家族・友人・近所の方を集めての小さな会で、十分です。</p>
+      <a class="btn btn-mustard" href="${CONFIG.HOST_INQUIRY_FORM}" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        ホスト相談フォームへ
+      </a>
+      <div class="text-xs opacity-80 mt-3">なにかし堂より2〜3日以内に折り返します</div>
+    </div>
+  </section>
+  `;
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', async () => {
+  // フッターのメールアドレスをCONFIGから反映
+  const footerEmail = document.getElementById('footerEmail');
+  if (footerEmail) footerEmail.textContent = CONFIG.ORG_EMAIL;
+
+  await loadData();
+  navigate('top');
+});
+</script>
+</body>
+</html>
