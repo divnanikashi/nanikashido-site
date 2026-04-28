@@ -219,10 +219,14 @@
 
   @media (max-width: 768px) {
     .counter-num { font-size: 68px; }
-    .nav-desktop { display: none; }
+    .nav-desktop { display: none !important; }
   }
   @media (min-width: 769px) {
-    .nav-mobile { display: none; }
+    .nav-mobile { display: none !important; }
+  }
+  /* スマホ時のヘッダーロゴ部分の調整 */
+  @media (max-width: 768px) {
+    .logo-mark { width: 36px; height: 36px; font-size: 18px; }
   }
 </style>
 </head>
